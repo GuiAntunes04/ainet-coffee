@@ -20,7 +20,7 @@ O objetivo é classificar imagens de grãos de café em cinco classes:
 - `train_cnn.py`: treino de uma CNN simples.
 - `train_mlp.py`: treino de uma MLP simples.
 - `train_mobilenet.py`: treino com MobileNetV2 pré-treinada.
-- `evaluate.py`: avaliação local em uma pasta rotulada.
+- `evaluate.py`: avaliacao local em uma pasta rotulada.
 - `predict.py`: geração do `submission.csv` no formato do Kaggle.
 - `experiments/`: modelos e metadados de cada experimento.
 
@@ -32,50 +32,129 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## Treinar modelos
+## Treinar CNN
 
-CNN simples:
-
-```bash
-python train_cnn.py --experiment-name cnn_exp001_baseline
-```
-
-Outro exemplo, mudando parâmetros:
-
-```bash
-python train_cnn.py --experiment-name cnn_exp006_lr0003 --learning-rate 0.0003 --dropout 0.5
-```
-
-Parâmetros principais da CNN:
-
-```bash
-python train_cnn.py --experiment-name cnn_exp013_aug_medium --image-size 96 --filters 16,32,64 --dropout 0.5 --learning-rate 0.0003 --batch-size 16 --l2 0.0001 --pooling gap --augmentation medium
-```
-
-Roteiro inicial recomendado:
+Comando base:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp001_baseline
-python train_cnn.py --experiment-name cnn_exp002_img96 --image-size 96
-python train_cnn.py --experiment-name cnn_exp006_lr0003 --image-size 96 --learning-rate 0.0003
-python train_cnn.py --experiment-name cnn_exp010_l2_0001 --image-size 96 --learning-rate 0.0003 --l2 0.0001
-python train_cnn.py --experiment-name cnn_exp013_aug_medium --image-size 96 --learning-rate 0.0003 --augmentation medium
-python train_cnn.py --experiment-name cnn_exp019_gap --image-size 96 --learning-rate 0.0003 --pooling gap
 ```
 
-MLP simples:
+Alterar número de épocas:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_epochs60 --epochs 60
+```
+
+Alterar batch size:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_batch16 --batch-size 16
+```
+
+Alterar tamanho da imagem:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_img96 --image-size 96
+```
+
+Alterar learning rate:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_lr0003 --learning-rate 0.0003
+```
+
+Alterar dropout:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_dropout04 --dropout 0.4
+```
+
+Alterar filtros convolucionais:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_filters8_16_32 --filters 8,16,32
+```
+
+Alterar quantidade de neurônios da camada densa:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_dense64 --dense-units 64
+```
+
+Alterar regularização L2:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_l2_0001 --l2 0.0001
+```
+
+Alterar pooling final:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_gap --pooling gap
+```
+
+Alterar augmentation:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_aug_light --augmentation light
+```
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_aug_strong --augmentation strong
+```
+
+Combinar vários parâmetros:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_custom --image-size 96 --batch-size 16 --learning-rate 0.0003 --dropout 0.4 --filters 16,32,64 --dense-units 32 --l2 0.0001 --pooling gap --augmentation medium
+```
+
+## Treinar MLP
+
+Comando base:
 
 ```bash
 python train_mlp.py --experiment-name mlp_exp001_baseline
 ```
 
-Exemplo mudando MLP:
+Alterar número de épocas:
 
 ```bash
-python train_mlp.py --experiment-name mlp_exp002_img32 --image-size 32 --batch-size 8 --learning-rate 0.0003 --dropout 0.5
+python train_mlp.py --experiment-name mlp_exp_epochs60 --epochs 60
 ```
 
-MobileNetV2:
+Alterar batch size:
+
+```bash
+python train_mlp.py --experiment-name mlp_exp_batch8 --batch-size 8
+```
+
+Alterar tamanho da imagem:
+
+```bash
+python train_mlp.py --experiment-name mlp_exp_img32 --image-size 32
+```
+
+Alterar learning rate:
+
+```bash
+python train_mlp.py --experiment-name mlp_exp_lr0003 --learning-rate 0.0003
+```
+
+Alterar dropout:
+
+```bash
+python train_mlp.py --experiment-name mlp_exp_dropout05 --dropout 0.5
+```
+
+Combinar varios parâmetros:
+
+```bash
+python train_mlp.py --experiment-name mlp_exp_custom --image-size 32 --batch-size 8 --learning-rate 0.0003 --dropout 0.5 --epochs 60
+```
+
+## Treinar MobileNetV2
 
 ```bash
 python train_mobilenet.py
@@ -83,11 +162,16 @@ python train_mobilenet.py
 
 ## Avaliar localmente
 
+Avaliar um experimento:
+
 ```bash
-python evaluate.py --model mobilenet
+python evaluate.py --experiment experiments/cnn_exp002_img96
 ```
 
-Também e possível avaliar a CNN:
+Nesse modo, o script lê o `metadata.json` e usa automaticamente o tamanho correto da
+imagem.
+
+Tambem e possível informar o modelo manualmente:
 
 ```bash
 python evaluate.py --model cnn --model-path experiments/cnn_exp001_baseline/model.keras
@@ -95,20 +179,7 @@ python evaluate.py --model cnn --model-path experiments/cnn_exp001_baseline/mode
 
 ## Gerar submissao
 
-Por padrão, a submissão usa o modelo `modelo_mobilenet.keras` e respeita a ordem do
-`submission_template.csv`.
-
-```bash
-python predict.py --model mobilenet
-```
-
-Para usar a CNN:
-
-```bash
-python predict.py --model cnn --model-path experiments/cnn_exp001_baseline/model.keras
-```
-
-Para gerar a submissão de um experimento, o jeito recomendado e:
+Gerar a submissão de um experimento:
 
 ```bash
 python predict.py --experiment experiments/cnn_exp002_img96
@@ -117,7 +188,13 @@ python predict.py --experiment experiments/cnn_exp002_img96
 Nesse modo, o script le o `metadata.json`, usa automaticamente o tamanho correto da
 imagem e salva o resultado em `experiments/cnn_exp002_img96/submission.csv`.
 
-O arquivo final será salvo como `submission.csv`, com as colunas:
+Também e possível informar o modelo manualmente:
+
+```bash
+python predict.py --model cnn --model-path experiments/cnn_exp001_baseline/model.keras
+```
+
+O arquivo final usa as colunas:
 
 ```csv
 id,class
@@ -138,5 +215,5 @@ O Kaggle espera os seguintes rótulos numéricos:
 ## Notas de projeto
 
 Os dados, modelos `.keras`, ambiente virtual e arquivo `submission.csv` ficam fora do
-Git por padrao. Os arquivos `metadata.json` dentro de `experiments/` podem ser
+Git por padrão. Os arquivos `metadata.json` dentro de `experiments/` podem ser
 versionados, porque registram os parâmetros e resultados sem armazenar modelos pesados.
