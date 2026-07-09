@@ -1,0 +1,32 @@
+{
+  "experiment_name": "cnn_exp010_l2_0001",
+  "architecture": "cnn",
+  "model_path": "C:\\ainet-caf\u00e9-md\\experiments\\cnn_exp010_l2_0001\\model.keras",
+  "image_size": [
+    96,
+    96
+  ],
+  "batch_size": 32,
+  "epochs": 40,
+  "learning_rate": 0.0003,
+  "dropout": 0.5,
+  "filters": [
+    16,
+    32,
+    64
+  ],
+  "dense_units": 32,
+  "l2": 0.0001,
+  "pooling": "flatten",
+  "augmentation": "medium",
+  "best_val_accuracy": 0.1428571492433548,
+  "best_val_loss": 1.6292695999145508,
+  "class_names": [
+    "Cereja",
+    "Passa",
+    "Seco",
+    "Verde",
+    "Verde cana"
+  ],
+  "created_at": "2026-07-09T16:44:13"
+}

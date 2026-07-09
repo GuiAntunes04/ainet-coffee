@@ -1,0 +1,32 @@
+{
+  "experiment_name": "cnn_exp013_aug_medium",
+  "architecture": "cnn",
+  "model_path": "C:\\ainet-caf\u00e9-md\\experiments\\cnn_exp013_aug_medium\\model.keras",
+  "image_size": [
+    96,
+    96
+  ],
+  "batch_size": 32,
+  "epochs": 40,
+  "learning_rate": 0.001,
+  "dropout": 0.5,
+  "filters": [
+    16,
+    32,
+    64
+  ],
+  "dense_units": 32,
+  "l2": 0.0,
+  "pooling": "flatten",
+  "augmentation": "medium",
+  "best_val_accuracy": 0.4285714328289032,
+  "best_val_loss": 1.3198405504226685,
+  "class_names": [
+    "Cereja",
+    "Passa",
+    "Seco",
+    "Verde",
+    "Verde cana"
+  ],
+  "created_at": "2026-07-09T16:46:45"
+}

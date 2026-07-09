@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local editor files
+.vscode/
+
+# Kaggle data and generated artifacts
+Training set-kaggle/
+test-kaggle/
+*.keras
+submission.csv
+experiments/*/model.keras
+
+# System files
+.DS_Store
+Thumbs.db
