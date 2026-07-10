@@ -70,8 +70,11 @@ def build_model(args, class_count):
 
     model_layers = [
         layers.Input(shape=(*args.image_size, 3)),
-        build_data_augmentation(args.augmentation),
     ]
+
+    augmentation = build_data_augmentation(args.augmentation)
+    if augmentation is not None:
+        model_layers.append(augmentation)
 
     for filter_count in args.filters:
         model_layers.extend([
@@ -132,7 +135,7 @@ def main():
 
     early_stop = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=30,
+        patience=20,
         restore_best_weights=True,
     )
 

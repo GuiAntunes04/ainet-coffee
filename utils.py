@@ -11,7 +11,7 @@ normalization = layers.Rescaling(1.0 / 255)
 
 def build_data_augmentation(level="medium"):
     if level == "none":
-        return tf.keras.Sequential(name="data_augmentation")
+        return None
 
     settings = {
         "light": {"rotation": 0.05, "zoom": 0.05, "contrast": None},
