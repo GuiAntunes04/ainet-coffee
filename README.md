@@ -3,7 +3,7 @@
 Projeto para a competicao Kaggle AINET Coffee:
 https://www.kaggle.com/competitions/ainet-coffee/overview
 
-O objetivo é classificar imagens de grãos de café em cinco classes:
+O objetivo e classificar imagens de graos de cafe em cinco classes:
 
 - `Verde`
 - `Verde cana`
@@ -11,26 +11,76 @@ O objetivo é classificar imagens de grãos de café em cinco classes:
 - `Passa`
 - `Seco`
 
-## Estrutura atual
+## Estrutura
 
 - `Training set-kaggle/`: imagens de treino organizadas por classe.
-- `test-kaggle/`: imagens de teste.
-- `config.py`: caminhos, nomes de modelos, tamanho das imagens e mapeamento das classes.
-- `utils.py`: carregamento dos datasets e aumento de dados.
-- `train_cnn.py`: treino de uma CNN simples.
-- `train_mlp.py`: treino de uma MLP simples.
-- `train_mobilenet.py`: treino com MobileNetV2 pré-treinada.
-- `evaluate.py`: avaliacao local em uma pasta rotulada.
-- `predict.py`: geração do `submission.csv` no formato do Kaggle.
-- `experiments/`: modelos e metadados de cada experimento.
+- `test-kaggle/`: imagens usadas para avaliacao local e geracao da submissao.
+- `extra-tests/`: imagens externas para testes locais adicionais.
+- `experiments/`: pastas de experimentos, com `metadata.json`, `model.keras` local e submissao quando gerada.
+- `config.py`: caminhos principais, classes, rotulos e configuracoes globais.
+- `utils.py`: carregamento dos datasets, normalizacao e data augmentation.
+- `experiment_utils.py`: criacao de pastas de experimento e salvamento de metadados.
+- `train_cnn.py`: treino de CNN com parametros configuraveis por comando.
+- `train_mlp.py`: treino de MLP com parametros configuraveis por comando.
+- `train_mobilenet.py`: treino com MobileNetV2 pre-treinada.
+- `evaluate.py`: avaliacao local de um modelo treinado.
+- `predict.py`: geracao de `submission.csv` para o Kaggle.
+- `predict_extra_tests.py`: predicao das imagens em `extra-tests/`.
 
-## Como preparar o ambiente
+## O Que Entra No Git
+
+Entram no repositorio:
+
+- codigo Python;
+- `README.md`;
+- `requirements.txt`;
+- imagens de treino e teste;
+- imagens de `extra-tests/`;
+- `metadata.json` dos experimentos;
+- `submission.csv` dos experimentos.
+
+Ficam fora do Git:
+
+- `.venv/`;
+- `.vscode/`;
+- `__pycache__/`;
+- `.pytest_cache/`;
+- arquivos `*.keras`, incluindo `experiments/*/model.keras`.
+
+Os modelos treinados ficam no computador local. Para compartilhar um modelo especifico
+com um colaborador, envie o arquivo `model.keras` por outro meio ou use uma solucao
+propria para arquivos grandes.
+
+## Ambiente
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+## Fluxo De Experimentos
+
+Cada treino deve receber um nome unico:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp001_baseline
+```
+
+O treino cria uma pasta como:
+
+```text
+experiments/cnn_exp001_baseline/
+```
+
+Dentro dela ficam:
+
+- `model.keras`: melhor modelo salvo pelo `ModelCheckpoint`, ignorado pelo Git.
+- `metadata.json`: parametros e metricas do experimento.
+- `submission.csv`: arquivo gerado depois pelo `predict.py`, se voce rodar a predicao.
+
+Os metadados e submissoes podem ser versionados para registrar o historico dos
+experimentos sem subir os modelos treinados.
 
 ## Treinar CNN
 
@@ -40,7 +90,7 @@ Comando base:
 python train_cnn.py --experiment-name cnn_exp001_baseline
 ```
 
-Alterar número de épocas:
+Alterar numero de epocas:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp_epochs60 --epochs 60
@@ -76,13 +126,16 @@ Alterar filtros convolucionais:
 python train_cnn.py --experiment-name cnn_exp_filters8_16_32 --filters 8,16,32
 ```
 
-Alterar quantidade de neurônios da camada densa:
+O parametro `--filters` tambem define a quantidade de blocos convolucionais. Por
+exemplo, `8,16,32` cria tres blocos `Conv2D + MaxPooling2D`.
+
+Alterar quantidade de neuronios da camada densa:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp_dense64 --dense-units 64
 ```
 
-Alterar regularização L2:
+Alterar regularizacao L2:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp_l2_0001 --l2 0.0001
@@ -94,6 +147,11 @@ Alterar pooling final:
 python train_cnn.py --experiment-name cnn_exp_gap --pooling gap
 ```
 
+Valores aceitos:
+
+- `flatten`
+- `gap`
+
 Alterar augmentation:
 
 ```bash
@@ -104,7 +162,14 @@ python train_cnn.py --experiment-name cnn_exp_aug_light --augmentation light
 python train_cnn.py --experiment-name cnn_exp_aug_strong --augmentation strong
 ```
 
-Combinar vários parâmetros:
+Valores aceitos:
+
+- `none`
+- `light`
+- `medium`
+- `strong`
+
+Combinar varios parametros:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp_custom --image-size 96 --batch-size 16 --learning-rate 0.0003 --dropout 0.4 --filters 16,32,64 --dense-units 32 --l2 0.0001 --pooling gap --augmentation medium
@@ -118,7 +183,7 @@ Comando base:
 python train_mlp.py --experiment-name mlp_exp001_baseline
 ```
 
-Alterar número de épocas:
+Alterar numero de epocas:
 
 ```bash
 python train_mlp.py --experiment-name mlp_exp_epochs60 --epochs 60
@@ -148,7 +213,7 @@ Alterar dropout:
 python train_mlp.py --experiment-name mlp_exp_dropout05 --dropout 0.5
 ```
 
-Combinar varios parâmetros:
+Combinar varios parametros:
 
 ```bash
 python train_mlp.py --experiment-name mlp_exp_custom --image-size 32 --batch-size 8 --learning-rate 0.0003 --dropout 0.5 --epochs 60
@@ -160,35 +225,46 @@ python train_mlp.py --experiment-name mlp_exp_custom --image-size 32 --batch-siz
 python train_mobilenet.py
 ```
 
-## Avaliar localmente
+## Avaliar Modelo
 
-Avaliar um experimento:
+O jeito recomendado e avaliar pelo experimento:
 
 ```bash
 python evaluate.py --experiment experiments/cnn_exp002_img96
 ```
 
-Nesse modo, o script lê o `metadata.json` e usa automaticamente o tamanho correto da
-imagem.
+Nesse modo, o script le o `metadata.json`, carrega `model.keras` e usa automaticamente
+o tamanho de imagem correto. Para isso, o `model.keras` precisa existir localmente,
+mesmo estando fora do Git.
 
-Tambem e possível informar o modelo manualmente:
+Tambem e possivel informar o modelo manualmente:
 
 ```bash
 python evaluate.py --model cnn --model-path experiments/cnn_exp001_baseline/model.keras
 ```
 
-## Gerar submissao
+A avaliacao usa as imagens rotuladas dentro de `test-kaggle/` e mostra:
 
-Gerar a submissão de um experimento:
+- `loss`
+- `accuracy`
+- `classification_report`
+- `confusion_matrix`
+
+## Gerar Submissao Kaggle
+
+O jeito recomendado e gerar pelo experimento:
 
 ```bash
 python predict.py --experiment experiments/cnn_exp002_img96
 ```
 
-Nesse modo, o script le o `metadata.json`, usa automaticamente o tamanho correto da
-imagem e salva o resultado em `experiments/cnn_exp002_img96/submission.csv`.
+Nesse modo, o script le o `metadata.json`, usa o tamanho correto da imagem e salva:
 
-Também e possível informar o modelo manualmente:
+```text
+experiments/cnn_exp002_img96/submission.csv
+```
+
+Tambem e possivel informar o modelo manualmente:
 
 ```bash
 python predict.py --model cnn --model-path experiments/cnn_exp001_baseline/model.keras
@@ -200,9 +276,30 @@ O arquivo final usa as colunas:
 id,class
 ```
 
-## Mapeamento das classes
+## Testes Extras
 
-O Kaggle espera os seguintes rótulos numéricos:
+A pasta `extra-tests/` e o arquivo `predict_extra_tests.py` fazem parte do repositorio.
+Eles servem para testar imagens externas sem misturar com o dataset principal da
+competicao.
+
+Exemplo:
+
+```bash
+python predict_extra_tests.py --experiment experiments/cnn_exp002_img96
+```
+
+A saida padrao e:
+
+```text
+extra-tests/predictions.csv
+```
+
+Se esse arquivo estiver aberto ou bloqueado, o script salva um novo arquivo com
+timestamp.
+
+## Mapeamento Das Classes
+
+O Kaggle espera os seguintes rotulos numericos:
 
 | Classe | Rotulo |
 | --- | ---: |
@@ -212,8 +309,14 @@ O Kaggle espera os seguintes rótulos numéricos:
 | Passa | 4 |
 | Seco | 5 |
 
-## Notas de projeto
+## Observacoes
 
-Os dados, modelos `.keras`, ambiente virtual e arquivo `submission.csv` ficam fora do
-Git por padrão. Os arquivos `metadata.json` dentro de `experiments/` podem ser
-versionados, porque registram os parâmetros e resultados sem armazenar modelos pesados.
+Como o conjunto de dados e pequeno, os resultados variam bastante entre treinos mesmo
+com parametros parecidos. Sempre compare:
+
+- metricas do `metadata.json`;
+- resultado do `evaluate.py`;
+- resultado publico/privado do Kaggle, quando houver.
+
+Evite sobrescrever experimentos bons. Use sempre um `--experiment-name` novo para cada
+rodada importante.

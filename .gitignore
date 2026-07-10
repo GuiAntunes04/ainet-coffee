@@ -11,11 +11,9 @@ venv/
 .vscode/
 
 # Kaggle data and generated artifacts
-Training set-kaggle/
-test-kaggle/
 *.keras
 submission.csv
-experiments/*/model.keras
+experiments/*
 
 # System files
 .DS_Store
