@@ -3,14 +3,14 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
-from config import BATCH_SIZE, IMAGE_SIZE_CNN
+from config import BATCH_SIZE, IMAGE_SIZE_CNN, SEED
 from experiment_utils import (
     best_metric,
     create_experiment_dir,
     min_metric,
     save_experiment_metadata,
 )
-from utils import load_datasets
+from utils import configure_reproducibility, load_datasets
 
 
 def parse_args():
@@ -25,11 +25,14 @@ def parse_args():
     parser.add_argument("--image-size", type=int, default=IMAGE_SIZE_CNN[0])
     parser.add_argument("--learning-rate", type=float, default=0.001)
     parser.add_argument("--dropout", type=float, default=0.3)
+    parser.add_argument("--seed", type=int, default=SEED)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    configure_reproducibility(args.seed)
+
     experiment_dir = create_experiment_dir(args.experiment_name)
     model_path = experiment_dir / "model.keras"
     image_size = (args.image_size, args.image_size)
@@ -37,6 +40,7 @@ def main():
     train_ds, val_ds, class_names = load_datasets(
         image_size=image_size,
         batch_size=args.batch_size,
+        seed=args.seed,
     )
 
     print("Class order:", class_names)
@@ -87,6 +91,7 @@ def main():
             "epochs": args.epochs,
             "learning_rate": args.learning_rate,
             "dropout": args.dropout,
+            "seed": args.seed,
             "dense_units": [32, 16],
             "best_val_accuracy": best_metric(history, "val_accuracy"),
             "best_val_loss": min_metric(history, "val_loss"),

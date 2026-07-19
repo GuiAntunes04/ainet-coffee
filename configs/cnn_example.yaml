@@ -1,0 +1,33 @@
+experiment_name: cnn_recovery_simple
+epochs: 100
+batch_size: 5
+image_size: 96
+
+learning_rate: 0.001
+optimizer: adam
+weight_decay: 0.0
+label_smoothing: 0.0
+class_weights: true
+
+filters: [32, 64, 128]
+kernel_size: 3
+activation: relu
+batch_normalization: false
+pooling: gap
+dense_units: 32
+
+dropout: 0.0
+conv_dropout: 0.0
+l2: 0.0
+
+augmentation: strong
+random_brightness: 0.0
+random_contrast: 0.0
+random_translation: 0.0
+random_zoom: 0.0
+
+patience: 15
+reduce_lr_factor: 0.5
+reduce_lr_patience: 8
+min_lr: 0.00001
+seed: 42

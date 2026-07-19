@@ -15,17 +15,16 @@ O objetivo e classificar imagens de graos de cafe em cinco classes:
 
 - `Training set-kaggle/`: imagens de treino organizadas por classe.
 - `test-kaggle/`: imagens usadas para avaliacao local e geracao da submissao.
-- `extra-tests/`: imagens externas para testes locais adicionais.
 - `experiments/`: pastas de experimentos, com `metadata.json`, `model.keras` local e submissao quando gerada.
 - `config.py`: caminhos principais, classes, rotulos e configuracoes globais.
 - `utils.py`: carregamento dos datasets, normalizacao e data augmentation.
 - `experiment_utils.py`: criacao de pastas de experimento e salvamento de metadados.
 - `train_cnn.py`: treino de CNN com parametros configuraveis por comando.
+- `optimize_cnn.py`: busca automatica de hiperparametros da CNN com Optuna.
 - `train_mlp.py`: treino de MLP com parametros configuraveis por comando.
 - `train_mobilenet.py`: treino com MobileNetV2 pre-treinada.
 - `evaluate.py`: avaliacao local de um modelo treinado.
 - `predict.py`: geracao de `submission.csv` para o Kaggle.
-- `predict_extra_tests.py`: predicao das imagens em `extra-tests/`.
 
 ## O Que Entra No Git
 
@@ -35,7 +34,6 @@ Entram no repositorio:
 - `README.md`;
 - `requirements.txt`;
 - imagens de treino e teste;
-- imagens de `extra-tests/`;
 - `metadata.json` dos experimentos;
 - `submission.csv` dos experimentos.
 
@@ -88,6 +86,18 @@ Comando base:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp001_baseline
+```
+
+O jeito recomendado para muitos parametros e usar um arquivo YAML:
+
+```bash
+python train_cnn.py --config configs/cnn_example.yaml
+```
+
+Voce tambem pode sobrescrever qualquer valor do YAML pela linha de comando:
+
+```bash
+python train_cnn.py --config configs/cnn_example.yaml --experiment-name cnn_teste_bs4 --batch-size 4
 ```
 
 Alterar numero de epocas:
@@ -169,10 +179,111 @@ Valores aceitos:
 - `medium`
 - `strong`
 
+Outros parametros aceitos pela CNN:
+
+- `seed`: semente usada para inicializacao, embaralhamento e augmentation.
+- `kernel_size`: tamanho do kernel convolucional.
+- `conv_dropout`: dropout depois dos blocos convolucionais.
+- `batch_normalization`: `true` ou `false`.
+- `activation`: `relu`, `elu` ou `swish`.
+- `optimizer`: `adam`, `adamw`, `rmsprop` ou `sgd`.
+- `weight_decay`: usado pelo `adamw`.
+- `label_smoothing`: suavizacao dos rotulos na loss.
+- `class_weights`: usa pesos automaticos por classe no treino.
+- `patience`: paciencia do early stopping.
+- `reduce_lr_factor`: fator do `ReduceLROnPlateau`.
+- `reduce_lr_patience`: paciencia do `ReduceLROnPlateau`.
+- `min_lr`: learning rate minimo.
+- `random_brightness`: variacao de brilho no augmentation.
+- `random_contrast`: variacao de contraste no augmentation.
+- `random_translation`: deslocamento no augmentation.
+- `random_zoom`: zoom no augmentation.
+
 Combinar varios parametros:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp_custom --image-size 96 --batch-size 16 --learning-rate 0.0003 --dropout 0.4 --filters 16,32,64 --dense-units 32 --l2 0.0001 --pooling gap --augmentation medium
+```
+
+Repetir uma rodada com a mesma semente:
+
+```bash
+python train_cnn.py --experiment-name cnn_exp_reprodutivel_a --seed 42
+python train_cnn.py --experiment-name cnn_exp_reprodutivel_b --seed 42
+```
+
+Isso reduz bastante a variacao entre execucoes iguais. Ainda assim, com poucas imagens,
+pequenas mudancas de treino ou validacao podem alterar muito as metricas.
+
+## Otimizar CNN Com Optuna
+
+O Optuna testa combinacoes de hiperparametros automaticamente e salva o melhor
+resultado como um experimento normal:
+
+```bash
+python optimize_cnn.py --experiment-name cnn_optuna_best --trials 20 --epochs 30
+```
+
+O melhor modelo fica em:
+
+```text
+experiments/cnn_optuna_best/model.keras
+```
+
+E os metadados ficam em:
+
+```text
+experiments/cnn_optuna_best/metadata.json
+```
+
+Cada tentativa tambem recebe uma pasta propria:
+
+```text
+experiments/cnn_optuna_best_trial_000/
+experiments/cnn_optuna_best_trial_001/
+...
+```
+
+Por padrao, essas pastas guardam o `metadata.json`, mas nao guardam o
+`model.keras` de todas as tentativas. O modelo completo fica salvo apenas no melhor
+experimento para economizar espaco em disco. Para manter o modelo de cada tentativa:
+
+```bash
+python optimize_cnn.py --experiment-name cnn_optuna_best --trials 20 --epochs 30 --keep-trial-models
+```
+
+Por padrao, o estudo fica salvo em SQLite para poder continuar depois:
+
+```text
+experiments/optuna/cnn_optuna.db
+```
+
+Para continuar o mesmo estudo, rode novamente com o mesmo `--study-name`:
+
+```bash
+python optimize_cnn.py --study-name cnn_optuna --experiment-name cnn_optuna_best --trials 10 --epochs 30
+```
+
+O script otimiza por `val_accuracy`. Para otimizar por menor `val_loss`:
+
+```bash
+python optimize_cnn.py --direction minimize --experiment-name cnn_optuna_loss --trials 20 --epochs 30
+```
+
+Quando `--direction minimize` e usado, o checkpoint tambem salva o modelo com menor
+`val_loss`. No modo padrao, ele salva o modelo com maior `val_accuracy`.
+
+Para reduzir os logs de treino:
+
+```bash
+python optimize_cnn.py --experiment-name cnn_optuna_best --trials 20 --epochs 30 --verbose 0
+```
+
+Depois da busca, avalie ou gere submissao usando o experimento salvo:
+
+```bash
+python evaluate.py --experiment experiments/cnn_optuna_best
+python predict.py --experiment experiments/cnn_optuna_best
 ```
 
 ## Treinar MLP
@@ -225,6 +336,12 @@ python train_mlp.py --experiment-name mlp_exp_custom --image-size 32 --batch-siz
 python train_mobilenet.py
 ```
 
+Tambem e possivel escolher o nome do experimento:
+
+```bash
+python train_mobilenet.py --experiment-name mobilenet_exp001_baseline
+```
+
 ## Avaliar Modelo
 
 O jeito recomendado e avaliar pelo experimento:
@@ -240,7 +357,7 @@ mesmo estando fora do Git.
 Tambem e possivel informar o modelo manualmente:
 
 ```bash
-python evaluate.py --model cnn --model-path experiments/cnn_exp001_baseline/model.keras
+python evaluate.py --model cnn --model-path experiments/cnn_exp_img_96_bs_16_ln_0.001_f_16_32_du_32_ep_100/model.keras
 ```
 
 A avaliacao usa as imagens rotuladas dentro de `test-kaggle/` e mostra:
@@ -267,7 +384,7 @@ experiments/cnn_exp002_img96/submission.csv
 Tambem e possivel informar o modelo manualmente:
 
 ```bash
-python predict.py --model cnn --model-path experiments/cnn_exp001_baseline/model.keras
+python predict.py --model cnn --model-path experiments/cnn_exp_img_96_bs_16_ln_0.001_f_16_32_du_32_ep_100/model.keras
 ```
 
 O arquivo final usa as colunas:
@@ -275,27 +392,6 @@ O arquivo final usa as colunas:
 ```csv
 id,class
 ```
-
-## Testes Extras
-
-A pasta `extra-tests/` e o arquivo `predict_extra_tests.py` fazem parte do repositorio.
-Eles servem para testar imagens externas sem misturar com o dataset principal da
-competicao.
-
-Exemplo:
-
-```bash
-python predict_extra_tests.py --experiment experiments/cnn_exp002_img96
-```
-
-A saida padrao e:
-
-```text
-extra-tests/predictions.csv
-```
-
-Se esse arquivo estiver aberto ou bloqueado, o script salva um novo arquivo com
-timestamp.
 
 ## Mapeamento Das Classes
 

@@ -10,13 +10,17 @@ EXPERIMENTS_DIR = PROJECT_ROOT / "experiments"
 SUBMISSION_TEMPLATE_PATH = PROJECT_ROOT / "submission_template.csv"
 SUBMISSION_PATH = PROJECT_ROOT / "submission.csv"
 
-MODEL_CNN_BEST_PATH = EXPERIMENTS_DIR / "cnn_exp001_baseline" / "model.keras"
+MODEL_CNN_BEST_PATH = (
+    EXPERIMENTS_DIR
+    / "cnn_exp_img_96_bs_16_ln_0.001_f_16_32_du_32_ep_100"
+    / "model.keras"
+)
 MODEL_MLP_PATH = EXPERIMENTS_DIR / "mlp_exp001_baseline" / "model.keras"
 MODEL_MOBILENET_PATH = EXPERIMENTS_DIR / "mobilenet_exp001_baseline" / "model.keras"
 
-IMAGE_SIZE_CNN = (64, 64)
+IMAGE_SIZE_CNN = (96, 96)
 IMAGE_SIZE_MOBILENET = (160, 160)
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 SEED = 42
 
 CLASS_TO_LABEL = {
