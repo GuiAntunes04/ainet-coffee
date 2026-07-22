@@ -24,11 +24,11 @@ BATCH_SIZE = 16
 SEED = 42
 
 CLASS_TO_LABEL = {
-    "Verde": 1,
-    "Verde cana": 2,
-    "Cereja": 3,
-    "Passa": 4,
-    "Seco": 5,
+    "Verde": 0,
+    "Verde cana": 1,
+    "Cereja": 2,
+    "Passa": 3,
+    "Seco": 4,
 }
 
 CLASS_NAMES = ["Cereja", "Passa", "Seco", "Verde", "Verde cana"]

@@ -1,0 +1,22 @@
+experiment_name: mobilenet_green_focus_teste
+epochs: 40
+batch_size: 4
+image_size: 96
+
+learning_rate: 0.00025
+dropout: 0.4
+label_smoothing: 0.05
+class_weights: true
+manual_class_weights:
+  Cereja: 1.02
+  Passa: 1.0
+  Seco: 0.9
+  Verde: 1.0
+  Verde cana: 1.0
+
+train_base_layers: 20
+patience: 12
+reduce_lr_factor: 0.5
+reduce_lr_patience: 5
+min_lr: 0.00001
+seed: 42

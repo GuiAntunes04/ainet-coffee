@@ -1,6 +1,6 @@
-experiment_name: cnn_recovery_simple
-epochs: 100
-batch_size: 5
+experiment_name: cnn_best_model_3
+epochs: 200
+batch_size: 4
 image_size: 96
 
 learning_rate: 0.001
@@ -9,12 +9,12 @@ weight_decay: 0.0
 label_smoothing: 0.0
 class_weights: true
 
-filters: [32, 64, 128]
+filters: [16, 32, 64]
 kernel_size: 3
 activation: relu
 batch_normalization: false
 pooling: gap
-dense_units: 32
+dense_units: 64
 
 dropout: 0.0
 conv_dropout: 0.0

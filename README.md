@@ -190,6 +190,7 @@ Outros parametros aceitos pela CNN:
 - `weight_decay`: usado pelo `adamw`.
 - `label_smoothing`: suavizacao dos rotulos na loss.
 - `class_weights`: usa pesos automaticos por classe no treino.
+- `manual_class_weights`: pesos manuais por nome de classe, usados quando `class_weights` esta ativo.
 - `patience`: paciencia do early stopping.
 - `reduce_lr_factor`: fator do `ReduceLROnPlateau`.
 - `reduce_lr_patience`: paciencia do `ReduceLROnPlateau`.
@@ -203,6 +204,18 @@ Combinar varios parametros:
 
 ```bash
 python train_cnn.py --experiment-name cnn_exp_custom --image-size 96 --batch-size 16 --learning-rate 0.0003 --dropout 0.4 --filters 16,32,64 --dense-units 32 --l2 0.0001 --pooling gap --augmentation medium
+```
+
+Exemplo de pesos manuais no YAML:
+
+```yaml
+class_weights: true
+manual_class_weights:
+  Cereja: 1.0
+  Passa: 1.0
+  Seco: 1.0
+  Verde: 1.2
+  Verde cana: 1.3
 ```
 
 Repetir uma rodada com a mesma semente:
@@ -342,6 +355,17 @@ Tambem e possivel escolher o nome do experimento:
 python train_mobilenet.py --experiment-name mobilenet_exp001_baseline
 ```
 
+O jeito recomendado para controlar os parametros e usar um YAML:
+
+```bash
+python train_mobilenet.py --config configs/mobilenet_example.yaml
+```
+
+No MobileNetV2, `train_base_layers` controla quantas camadas finais da base
+pre-treinada ficam treinaveis. Use `0` para manter a base congelada, que costuma ser
+mais estavel com poucos dados. Depois, teste valores pequenos como `20` com
+`learning_rate` menor, por exemplo `0.00003`, para fine-tuning.
+
 ## Avaliar Modelo
 
 O jeito recomendado e avaliar pelo experimento:
@@ -399,11 +423,11 @@ O Kaggle espera os seguintes rotulos numericos:
 
 | Classe | Rotulo |
 | --- | ---: |
-| Verde | 1 |
-| Verde cana | 2 |
-| Cereja | 3 |
-| Passa | 4 |
-| Seco | 5 |
+| Verde | 0 |
+| Verde cana | 1 |
+| Cereja | 2 |
+| Passa | 3 |
+| Seco | 4 |
 
 ## Observacoes
 

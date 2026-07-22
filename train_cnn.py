@@ -45,6 +45,7 @@ DEFAULT_CONFIG = {
     "random_zoom": None,
     "seed": SEED,
     "class_weights": False,
+    "manual_class_weights": None,
 }
 
 
@@ -104,6 +105,22 @@ def parse_bool(value):
     raise argparse.ArgumentTypeError("Use true or false.")
 
 
+def parse_manual_class_weights(value):
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise argparse.ArgumentTypeError("manual_class_weights must be a mapping of class names to weights.")
+
+    weights = {}
+    for class_name, weight in value.items():
+        weight = float(weight)
+        if weight <= 0:
+            raise argparse.ArgumentTypeError("manual_class_weights values must be positive.")
+        weights[str(class_name)] = weight
+
+    return weights
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a CNN experiment.")
     parser.add_argument("--config", type=Path, default=None, help="YAML file with CNN training settings.")
@@ -157,6 +174,9 @@ def normalize_config(config):
     normalized["filters"] = parse_filters(normalized["filters"])
     normalized["batch_normalization"] = parse_bool(normalized["batch_normalization"])
     normalized["class_weights"] = parse_bool(normalized["class_weights"])
+    normalized["manual_class_weights"] = parse_manual_class_weights(
+        normalized.get("manual_class_weights")
+    )
 
     for key in ("random_contrast", "random_zoom"):
         normalized[key] = parse_optional_float(normalized[key])
@@ -171,6 +191,23 @@ def normalize_config(config):
         raise ValueError("label_smoothing must be >= 0 and < 1.")
 
     return normalized
+
+
+def resolve_class_weights(class_names, automatic_class_weights, manual_class_weights):
+    if manual_class_weights is None:
+        return automatic_class_weights
+
+    unknown_classes = sorted(set(manual_class_weights) - set(class_names))
+    if unknown_classes:
+        raise ValueError(
+            "Unknown classes in manual_class_weights: "
+            f"{unknown_classes}. Valid classes: {class_names}"
+        )
+
+    return {
+        class_index: float(manual_class_weights.get(class_name, 1.0))
+        for class_index, class_name in enumerate(class_names)
+    }
 
 
 def build_config(cli_args):
@@ -360,6 +397,7 @@ def config_metadata(args):
         "random_zoom": args.random_zoom,
         "seed": args.seed,
         "class_weights": args.class_weights,
+        "manual_class_weights": args.manual_class_weights,
     }
 
 
@@ -370,11 +408,16 @@ def main():
     experiment_dir = create_experiment_dir(args.experiment_name)
     model_path = experiment_dir / "model.keras"
 
-    train_ds, val_ds, class_names, class_weights = load_datasets(
+    train_ds, val_ds, class_names, automatic_class_weights = load_datasets(
         image_size=args.image_size,
         batch_size=args.batch_size,
         seed=args.seed,
         return_class_weights=True,
+    )
+    class_weights = resolve_class_weights(
+        class_names,
+        automatic_class_weights,
+        args.manual_class_weights,
     )
 
     print("Class order:", class_names)
